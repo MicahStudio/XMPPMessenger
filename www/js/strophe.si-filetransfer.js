@@ -10,26 +10,27 @@
 
 */
 
-;(function () {
+;
+(function() {
   "use strict";
 
   function noop() {}
-  
+
   function inVals(stanza, ns) {
     var ok = false;
     var $mthds = $('si feature x field[var="stream-method"] value', stanza);
-    $mthds.each(function (i, m) {
+    $mthds.each(function(i, m) {
       if ($(m).text() === ns) ok = true;
     });
     return ok;
   }
 
   Strophe.addConnectionPlugin('si_filetransfer', {
-    
+
     _c: null,
     _cb: null,
 
-    init: function (c) {  
+    init: function(c) {
 
       this._c = c;
 
@@ -43,13 +44,11 @@
 
     },
 
-    _receive: function (m) {
-
+    _receive: function(m) {
       var $m = $(m);
       var from = $m.attr('from');
       var id = $m.attr('id')
       var sid = $('si', $m).attr('id');
-
       var iq = $iq({
         type: 'result',
         to: from,
@@ -60,25 +59,24 @@
       }).c('file', {
         xmlns: Strophe.NS.SI_FILE_TRANSFER
       }).up().c('feature', {
-        xmlns: Strophe.NS.FEATURE_NEG  
+        xmlns: Strophe.NS.FEATURE_NEG
       }).c('x', {
         xmlns: 'jabber:x:data',
         type: 'submit'
       }).c('field', {
         'var': 'stream-method'
       });
-
       // check for In-Band Bytestream plugin
       // and IBB accepted
-      if ( Object.hasOwnProperty.call(this._c, 'ibb') &&
-           inVals(m, Strophe.NS.IBB)
+      if (Object.hasOwnProperty.call(this._c, 'ibb') &&
+        inVals(m, Strophe.NS.IBB)
       ) iq.c('value').t(Strophe.NS.IBB);
 
       this._send(iq, noop, noop);
 
       var $file = $('file', $m);
       var filename = $file.attr('name');
-      var size = $file.attr('size'); 
+      var size = $file.attr('size');
       var mime = $('si', $m).attr('mime-type');
 
       // callback message
@@ -90,7 +88,7 @@
 
     },
 
-    _success: function (cb, stanza) {
+    _success: function(cb, stanza) {
       var err;
 
       // search for ibb
@@ -100,17 +98,17 @@
       cb(err);
     },
 
-    _fail: function (cb, stanza) {
+    _fail: function(cb, stanza) {
       var err = 'timed out';
       if (stanza) err = stanza;
       cb(new Error(err));
     },
 
-    _send: function (iq, success, fail) {
+    _send: function(iq, success, fail) {
       this._c.sendIQ(iq, success, fail, 60 * 1000);
     },
 
-    send: function (to, sid, filename, size, mime, cb) {
+    send: function(to, sid, filename, size, mime, cb) {
 
       // check for In-Band Bytestream plugin
       if (!Object.hasOwnProperty.call(this._c, 'ibb')) {
@@ -119,27 +117,27 @@
       }
 
       var iq = $iq({
-        type: 'set',
-        to: to,
-        id: this._c.getUniqueId('si-filetransfer')
-      }).c('si', {
-        xmlns: Strophe.NS.SI,
-        id: sid,
-        profile: Strophe.NS.SI_FILE_TRANSFER,
-        'mime-type': mime
-      }).c('file', {
-        xmlns: Strophe.NS.SI_FILE_TRANSFER,
-        name: filename,
-        size: size
-      }).up().c('feature', {
-        xmlns: Strophe.NS.FEATURE_NEG
-      }).c('x', {
-        xmlns: 'jabber:x:data',
-        type: 'form'
-      }).c('field', {
-        'var': 'stream-method',
-        type: 'list-single'
-      }).c('option')
+          type: 'set',
+          to: to,
+          id: this._c.getUniqueId('si-filetransfer')
+        }).c('si', {
+          xmlns: Strophe.NS.SI,
+          id: sid,
+          profile: Strophe.NS.SI_FILE_TRANSFER,
+          'mime-type': mime
+        }).c('file', {
+          xmlns: Strophe.NS.SI_FILE_TRANSFER,
+          name: filename,
+          size: size
+        }).up().c('feature', {
+          xmlns: Strophe.NS.FEATURE_NEG
+        }).c('x', {
+          xmlns: 'jabber:x:data',
+          type: 'form'
+        }).c('field', {
+          'var': 'stream-method',
+          type: 'list-single'
+        }).c('option')
         .c('value')
         .t(Strophe.NS.IBB);
 
@@ -150,7 +148,7 @@
 
     },
 
-    addFileHandler: function (fn) {
+    addFileHandler: function(fn) {
       this._cb = fn;
     }
 

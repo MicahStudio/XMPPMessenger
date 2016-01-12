@@ -105,11 +105,36 @@ var XMPP = function($q) {
         serve.xmlOutput = function(data) {
           console.debug("[发送消息]", data);
         };
+        var aFileParts, filename, mimeFile;
         serve.si_filetransfer.addFileHandler(function(from, sid, filename, size, mime) {
+          filename = filename;
+          mimeFile = mime;
           console.log(from);
           console.log(sid);
           console.log(filename);
+          console.log(size);
           console.log(mime);
+        });
+        serve.ibb.addIBBHandler(function(type, from, sid, data, seq) {
+          switch (type) {
+            case "open":
+              // new file, only metadata
+              aFileParts = [];
+              break;
+            case "data":
+              aFileParts.push(data);
+              // data
+              break;
+            case "close":
+              var data = "data:" + mimeFile + ";base64,";
+              for (var i = 0; i < aFileParts.length; i++) {
+                data += aFileParts[i].split(",")[1];
+              }
+              console.log("image", data);
+              // and we're done
+            default:
+              throw new Error("shouldn't be here.")
+          }
         });
         /**
          * 接收消息
